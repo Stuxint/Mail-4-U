@@ -57,7 +57,7 @@ def open():
         web = uc.Chrome()
         web.get("https://mail.google.com/mail/u/0/#sent")
 
-        genai.configure(api_key="AIzaSyDbEGTI5GEJiSeTF4tPlG5rPZ8-xyeHOt4")
+        genai.configure(api_key="Your API Key")
         model = genai.GenerativeModel('gemini-2.0-flash')
 
         #SIGN IN PART
@@ -232,7 +232,7 @@ root.title("Mail 4 U")
 
  
 # Set the window's icon to the logo
-logo_file_path = resource_path('M4U_Logo.png')
+logo_file_path = resource_path('Path to logo')
 logo = PhotoImage(file=logo_file_path)  
 # Set the window's icon to the logo
 root.iconphoto(False, logo)
@@ -279,5 +279,6 @@ e3.pack(side=LEFT, fill=X, expand=True)
 run = Button(root, text="Run", font=("Courier", 13, 'bold'), fg='black', bg='lightgreen', justify=CENTER, width=12, height=1)
 run.pack(pady=28)
 run.config(command=open)
+
 
 root.mainloop()
