@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 import os, sys
 import time
+import threading
 import pyperclip
 import undetected_chromedriver as uc
 from selenium.webdriver.support.ui import WebDriverWait
@@ -98,7 +99,10 @@ def reply_email(driver, name, number, model):
     except Exception as e:
         messagebox.showerror("Reply Error", f"Failed during replying emails: {e}")
 
-#-----------------MAIN FUNCTION-----------------
+#-----------------MAIN FUNCTION WITH THREAD-----------------
+def open_app_threaded():
+    threading.Thread(target=open_app, daemon=True).start()
+
 def open_app():
     try:
         name_entry.config(state=DISABLED)
@@ -184,13 +188,13 @@ progress_text.pack(pady=5)
 status_label = Label(root, text="Status: Ready", font=("Segoe UI", 12, "bold"), fg="white", bg="#1E1E2F")
 status_label.pack(pady=5)
 
-# Modern button
+# Modern button with threading
 def on_enter(e):
     run_button['bg'] = "#6CFF8F"
 def on_leave(e):
     run_button['bg'] = "#7B61FF"
 
-run_button = Button(root, text="Run", font=("Segoe UI", 14, "bold"), fg="white", bg="#7B61FF", activebackground="#6CFF8F", width=12, height=1, bd=0, command=open_app)
+run_button = Button(root, text="Run", font=("Segoe UI", 14, "bold"), fg="white", bg="#7B61FF", activebackground="#6CFF8F", width=12, height=1, bd=0, command=open_app_threaded)
 run_button.pack(pady=15)
 run_button.bind("<Enter>", on_enter)
 run_button.bind("<Leave>", on_leave)
