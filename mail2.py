@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import PhotoImage, messagebox
+from tkinter import ttk
 import os, sys, time
 import pyperclip
 import undetected_chromedriver as uc
@@ -9,6 +10,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 import google.generativeai as genai
 
+#-----------------HELPER FUNCTIONS-----------------
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -25,6 +27,8 @@ def reset_fields():
     e.delete("1.0", "end")
     e2.delete("1.0", "end")
     e3.delete("1.0", "end")
+    progress_var.set(0)
+    progress_bar.update()
 
 def generate_reply(model, email_text, name):
     prompt = f"""
@@ -83,6 +87,11 @@ def reply_email(driver, name, number, model):
             time.sleep(0.5)
             actions.send_keys('e').perform()
             time.sleep(1)
+
+            # Update progress bar
+            progress_var.set(int(((i + 1) / number) * 100))
+            progress_bar.update()
+
     except Exception as e:
         messagebox.showerror("Reply Error", f"Failed during replying emails: {e}")
 
@@ -139,13 +148,13 @@ def open_app():
 
 #-----------------GUI SETUP-----------------
 root = Tk()
-root.geometry("550x400")
+root.geometry("550x450")
 root.configure(background="#26366E")
 root.resizable(False, False)
 root.title("Mail 4 U")
 
 logo_file_path = resource_path('Path to logo')
-logo = PhotoImage(file=logo_file_path)  
+logo = PhotoImage(file=logo_file_path)
 root.iconphoto(False, logo)
 
 title = Label(root, text="Mail 4 U", font=("Arial", 18, 'bold'), fg='white', bg='#26366E')
@@ -180,8 +189,13 @@ Label(frame3, text="# Of Emails To Reply To: ", font=("Arial", 13, 'bold'), fg='
 e3 = Text(frame3, borderwidth=2, bg="#9EB0F3", font=("courier", 11), fg='black', height=1, width=12)
 e3.pack(side=LEFT, fill=X, expand=True)
 
+# Progress bar
+progress_var = IntVar()
+progress_bar = ttk.Progressbar(root, maximum=100, variable=progress_var, length=400)
+progress_bar.pack(pady=15)
+
 # Run button
 run = Button(root, text="Run", font=("Courier", 13, 'bold'), fg='black', bg='lightgreen', width=12, height=1, command=open_app)
-run.pack(pady=28)
+run.pack(pady=10)
 
 root.mainloop()
