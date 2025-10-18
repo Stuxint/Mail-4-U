@@ -9,7 +9,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 import google.generativeai as genai
 
-#-----------------HELPER FUNCTIONS-----------------
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
