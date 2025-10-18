@@ -11,6 +11,9 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 import google.generativeai as genai
 
+# ----------------- GLOBAL STOP FLAG -----------------
+stop_thread = False
+
 #-----------------HELPER FUNCTIONS-----------------
 def resource_path(relative_path):
     try:
@@ -20,6 +23,8 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 def reset_fields():
+    global stop_thread
+    stop_thread = False
     name_entry.config(state=NORMAL)
     email_entry.config(state=NORMAL)
     password_entry.config(state=NORMAL)
@@ -67,9 +72,14 @@ def sign_in(driver, email, password):
         raise RuntimeError(f"Login failed: {e}")
 
 def reply_email(driver, name, number, model):
+    global stop_thread
     try:
         actions = ActionChains(driver)
         for i in range(number):
+            if stop_thread:
+                status_label.config(text="Status: Cancelled by user")
+                break
+
             time.sleep(3)
             actions.send_keys(Keys.ENTER).perform()
             time.sleep(1)
@@ -104,6 +114,8 @@ def open_app_threaded():
     threading.Thread(target=open_app, daemon=True).start()
 
 def open_app():
+    global stop_thread
+    stop_thread = False
     try:
         name_entry.config(state=DISABLED)
         email_entry.config(state=DISABLED)
@@ -146,9 +158,15 @@ def open_app():
         messagebox.showerror("Unexpected Error", f"An unexpected error occurred: {e}")
         reset_fields()
 
+#-----------------CANCEL FUNCTION-----------------
+def cancel_thread():
+    global stop_thread
+    stop_thread = True
+    status_label.config(text="Status: Cancelling...")
+
 #-----------------MODERN GUI SETUP-----------------
 root = Tk()
-root.geometry("600x500")
+root.geometry("600x520")
 root.configure(background="#1E1E2F")
 root.resizable(False, False)
 root.title("Mail 4 U")
@@ -188,15 +206,28 @@ progress_text.pack(pady=5)
 status_label = Label(root, text="Status: Ready", font=("Segoe UI", 12, "bold"), fg="white", bg="#1E1E2F")
 status_label.pack(pady=5)
 
-# Modern button with threading
-def on_enter(e):
+# Modern Run button
+def on_enter_run(e):
     run_button['bg'] = "#6CFF8F"
-def on_leave(e):
+def on_leave_run(e):
     run_button['bg'] = "#7B61FF"
 
-run_button = Button(root, text="Run", font=("Segoe UI", 14, "bold"), fg="white", bg="#7B61FF", activebackground="#6CFF8F", width=12, height=1, bd=0, command=open_app_threaded)
-run_button.pack(pady=15)
-run_button.bind("<Enter>", on_enter)
-run_button.bind("<Leave>", on_leave)
+run_button = Button(root, text="Run", font=("Segoe UI", 14, "bold"), fg="white", bg="#7B61FF",
+                    activebackground="#6CFF8F", width=12, height=1, bd=0, command=open_app_threaded)
+run_button.pack(pady=10)
+run_button.bind("<Enter>", on_enter_run)
+run_button.bind("<Leave>", on_leave_run)
+
+# Cancel button
+def on_enter_cancel(e):
+    cancel_button['bg'] = "#FF8A8A"
+def on_leave_cancel(e):
+    cancel_button['bg'] = "#FF5C5C"
+
+cancel_button = Button(root, text="Cancel", font=("Segoe UI", 14, "bold"), fg="white", bg="#FF5C5C",
+                       activebackground="#FF8A8A", width=12, height=1, bd=0, command=cancel_thread)
+cancel_button.pack(pady=10)
+cancel_button.bind("<Enter>", on_enter_cancel)
+cancel_button.bind("<Leave>", on_leave_cancel)
 
 root.mainloop()
