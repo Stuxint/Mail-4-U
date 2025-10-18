@@ -1,6 +1,5 @@
 from tkinter import *
-from tkinter import PhotoImage, messagebox
-from tkinter import ttk
+from tkinter import PhotoImage, messagebox, ttk
 import os, sys, time
 import pyperclip
 import undetected_chromedriver as uc
@@ -19,16 +18,17 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 def reset_fields():
-    ea.config(state=NORMAL)
-    e.config(state=NORMAL)
-    e2.config(state=NORMAL)
-    e3.config(state=NORMAL)
-    ea.delete("1.0", "end")
-    e.delete("1.0", "end")
-    e2.delete("1.0", "end")
-    e3.delete("1.0", "end")
+    name_entry.config(state=NORMAL)
+    email_entry.config(state=NORMAL)
+    password_entry.config(state=NORMAL)
+    count_entry.config(state=NORMAL)
+    name_entry.delete(0, END)
+    email_entry.delete(0, END)
+    password_entry.delete(0, END)
+    count_entry.delete(0, END)
     progress_var.set(0)
     progress_bar.update()
+    status_label.config(text="Status: Ready")
 
 def generate_reply(model, email_text, name):
     prompt = f"""
@@ -88,7 +88,6 @@ def reply_email(driver, name, number, model):
             actions.send_keys('e').perform()
             time.sleep(1)
 
-            # Update progress bar
             progress_var.set(int(((i + 1) / number) * 100))
             progress_bar.update()
 
@@ -98,21 +97,21 @@ def reply_email(driver, name, number, model):
 #-----------------MAIN FUNCTION FOR GUI-----------------
 def open_app():
     try:
-        ea.config(state=DISABLED)
-        e.config(state=DISABLED)
-        e2.config(state=DISABLED)
-        e3.config(state=DISABLED)
+        name_entry.config(state=DISABLED)
+        email_entry.config(state=DISABLED)
+        password_entry.config(state=DISABLED)
+        count_entry.config(state=DISABLED)
 
         try:
-            number = int(e3.get("1.0", 'end-1c').strip())
+            number = int(count_entry.get().strip())
         except ValueError:
             messagebox.showerror("Error", "Please provide a valid number!")
             reset_fields()
             return
 
-        name = ea.get("1.0", 'end-1c').strip()
-        email = e.get("1.0", 'end-1c').strip()
-        password = e2.get("1.0", 'end-1c').strip()
+        name = name_entry.get().strip()
+        email = email_entry.get().strip()
+        password = password_entry.get().strip()
 
         if not email or not password or number <= 0:
             messagebox.showerror("Error", "Please specify all fields correctly!")
@@ -120,6 +119,7 @@ def open_app():
             return
 
         try:
+            status_label.config(text="Status: Opening Chrome...")
             web = uc.Chrome()
         except Exception as e:
             messagebox.showerror("Browser Error", f"Failed to open Chrome: {e}")
@@ -127,6 +127,7 @@ def open_app():
             return
 
         try:
+            status_label.config(text="Status: Signing in...")
             sign_in(web, email, password)
         except RuntimeError as e:
             messagebox.showerror("Login Error", str(e))
@@ -137,6 +138,7 @@ def open_app():
         genai.configure(api_key="Your API Key")
         model = genai.GenerativeModel('gemini-2.0-flash')
 
+        status_label.config(text="Status: Replying emails...")
         reply_email(web, name, number, model)
 
         web.quit()
@@ -153,49 +155,57 @@ root.configure(background="#26366E")
 root.resizable(False, False)
 root.title("Mail 4 U")
 
+# Logo
 logo_file_path = resource_path('Path to logo')
-logo = PhotoImage(file=logo_file_path)
-root.iconphoto(False, logo)
+if os.path.exists(logo_file_path):
+    logo = PhotoImage(file=logo_file_path)
+    root.iconphoto(False, logo)
 
-title = Label(root, text="Mail 4 U", font=("Arial", 18, 'bold'), fg='white', bg='#26366E')
+# Title
+title = Label(root, text="Mail 4 U", font=("Arial", 20, 'bold'), fg='white', bg='#26366E')
 title.pack(pady=10)
 
-# Frame 1
+# Style for ProgressBar
+style = ttk.Style(root)
+style.theme_use('clam')
+style.configure("TProgressbar", thickness=20, troughcolor="#9EB0F3", background="#7B61FF")
+
+# Frame for Entries
 frame = Frame(root, bg="#26366E")
-frame.pack(anchor=W, padx=110, pady=20)
-Label(frame, text="Name: ", font=("Arial", 13, 'bold'), fg='white', bg='#26366E').pack(side=LEFT)
-ea = Text(frame, borderwidth=2, bg="#9EB0F3", font=("courier", 11), fg='black', height=1, width=28)
-ea.pack(side=LEFT, fill=X, expand=True)
-ea.focus_set()
+frame.pack(pady=20)
 
-# Frame 2
-frame1 = Frame(root, bg="#26366E")
-frame1.pack(anchor=W, padx=110, pady=1)
-Label(frame1, text="Gmail: ", font=("Arial", 13, 'bold'), fg='white', bg='#26366E').pack(side=LEFT)
-e = Text(frame1, borderwidth=2, bg="#9EB0F3", font=("courier", 11), fg='black', height=1, width=28)
-e.pack(side=LEFT, fill=X, expand=True)
+# Name
+Label(frame, text="Name:", font=("Arial", 12, 'bold'), fg='white', bg='#26366E').grid(row=0, column=0, sticky=W, pady=5)
+name_entry = Entry(frame, width=30, font=("Courier", 11))
+name_entry.grid(row=0, column=1, pady=5)
+name_entry.focus_set()
 
-# Frame 3
-frame2 = Frame(root, bg="#26366E")
-frame2.pack(anchor=W, padx=110, pady=15)
-Label(frame2, text="Password: ", font=("Arial", 13, 'bold'), fg='white', bg='#26366E').pack(side=LEFT)
-e2 = Text(frame2, borderwidth=2, bg="#9EB0F3", font=("courier", 11), fg='black', height=1, width=24)
-e2.pack(side=LEFT, fill=X, expand=True)
+# Gmail
+Label(frame, text="Gmail:", font=("Arial", 12, 'bold'), fg='white', bg='#26366E').grid(row=1, column=0, sticky=W, pady=5)
+email_entry = Entry(frame, width=30, font=("Courier", 11))
+email_entry.grid(row=1, column=1, pady=5)
 
-# Frame 4
-frame3 = Frame(root, bg="#26366E")
-frame3.pack(anchor=W, padx=110, pady=8)
-Label(frame3, text="# Of Emails To Reply To: ", font=("Arial", 13, 'bold'), fg='white', bg='#26366E').pack(side=LEFT)
-e3 = Text(frame3, borderwidth=2, bg="#9EB0F3", font=("courier", 11), fg='black', height=1, width=12)
-e3.pack(side=LEFT, fill=X, expand=True)
+# Password
+Label(frame, text="Password:", font=("Arial", 12, 'bold'), fg='white', bg='#26366E').grid(row=2, column=0, sticky=W, pady=5)
+password_entry = Entry(frame, width=30, font=("Courier", 11), show="*")
+password_entry.grid(row=2, column=1, pady=5)
+
+# Number of emails
+Label(frame, text="# of Emails:", font=("Arial", 12, 'bold'), fg='white', bg='#26366E').grid(row=3, column=0, sticky=W, pady=5)
+count_entry = Entry(frame, width=10, font=("Courier", 11))
+count_entry.grid(row=3, column=1, pady=5, sticky=W)
 
 # Progress bar
 progress_var = IntVar()
 progress_bar = ttk.Progressbar(root, maximum=100, variable=progress_var, length=400)
 progress_bar.pack(pady=15)
 
+# Status label
+status_label = Label(root, text="Status: Ready", font=("Arial", 12, 'bold'), fg='white', bg='#26366E')
+status_label.pack(pady=5)
+
 # Run button
-run = Button(root, text="Run", font=("Courier", 13, 'bold'), fg='black', bg='lightgreen', width=12, height=1, command=open_app)
-run.pack(pady=10)
+run_button = Button(root, text="Run", font=("Courier", 13, 'bold'), fg='black', bg='lightgreen', width=12, height=1, command=open_app)
+run_button.pack(pady=10)
 
 root.mainloop()
